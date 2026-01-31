@@ -5,8 +5,11 @@ from pydantic import ConfigDict
 
 class Settings(BaseSettings):
     # App metadata
-    APP_TITLE: str = "Check Karo Baabeyo!"
-    APP_DESCRIPTION: str = "This is a description"
+    APP_TITLE: str = "Chat Karo Baabeyo!"
+    APP_DESCRIPTION: str = (
+        "API for chatting with uploaded documents using "
+        "session-isolated RAG and vector search."
+    )
     APP_VERSION: str = "1.0.0"
 
     # Runtime defaults (override via .env)
@@ -14,9 +17,16 @@ class Settings(BaseSettings):
     PORT: int = 8000
     ENV: str = "dev"
 
+    # Database settings
+    POSTGRES_DB: str
+    POSTGRES_PORT: int
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+
     model_config = ConfigDict(
         env_file=".env",
         case_sensitive=True,
+        extra="allow",
     )
 
 
