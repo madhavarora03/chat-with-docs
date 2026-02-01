@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
-from mailbox import Message
 from typing import Optional
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 
 from app.models.document import Document
 from app.models.enums.session_status import SessionStatus
+from app.models.message import Message
 from app.models.user import User
 
 

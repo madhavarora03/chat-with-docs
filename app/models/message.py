@@ -7,7 +7,7 @@ from app.models.chat_session import ChatSession
 from app.models.enums.role import Role
 
 
-class User(SQLModel, table=True):
+class Message(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     session_id: UUID = Field(foreign_key="chatsession.id")
     role: Role
