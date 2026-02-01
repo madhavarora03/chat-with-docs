@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 
 from app.core.config import get_settings
+from app.core.database import ping_db, dispose_engine
 from app.utils.logger import setup_logging, get_logger, get_uvicorn_log_config
 
 # Initialize logging FIRST - before any other operations
@@ -16,8 +17,14 @@ logger = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup: verify database connection
+    ping_db()
     logger.info("Application startup complete")
+
     yield
+
+    # Shutdown: dispose database engine
+    dispose_engine()
     logger.info("Application shutdown complete")
 
 
