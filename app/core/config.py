@@ -30,6 +30,13 @@ class Settings(BaseSettings):
         extra="allow",
     )
 
+    @property
+    def get_database_url(self) -> str:
+        return (
+            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
 
 @lru_cache()
 def get_settings() -> Settings:
