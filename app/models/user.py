@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -10,8 +10,8 @@ class User(SQLModel, table=True):
     email: str = Field(..., unique=True)
     name: str
     password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
     sessions: list["ChatSession"] = Relationship(back_populates="user")

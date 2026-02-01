@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
@@ -13,8 +13,8 @@ class User(SQLModel, table=True):
     role: Role
     name: str
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
     session: Optional[ChatSession] = Relationship(back_populates="messages")
