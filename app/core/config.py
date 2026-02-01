@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     ENV: str = "dev"
 
     # Database settings
+    POSTGRES_HOST: str
     POSTGRES_DB: str
     POSTGRES_PORT: int
     POSTGRES_USER: str
