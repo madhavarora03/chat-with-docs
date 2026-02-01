@@ -30,5 +30,8 @@ class ChatSession(SQLModel, table=True):
 
     # Relationships
     user: Optional[User] = Relationship(back_populates="sessions")
-    documents: list["Document"] = Relationship(back_populates="session")
+    document: Optional["Document"] = Relationship(
+        back_populates="session",
+        sa_relationship_kwargs={"uselist": False},
+    )
     messages: list["Message"] = Relationship(back_populates="session")

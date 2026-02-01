@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Document(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="chat_session.id")
+    session_id: UUID = Field(foreign_key="chat_session.id", unique=True)
     filename: str
     file_path: str
     mime_type: str  # TODO: make enum
@@ -20,5 +20,5 @@ class Document(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    session: Optional[ChatSession] = Relationship(back_populates="documents")
+    session: Optional[ChatSession] = Relationship(back_populates="document")
     chunks: list["DocumentChunk"] = Relationship(back_populates="document")
