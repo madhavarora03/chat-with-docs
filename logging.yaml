@@ -1,0 +1,100 @@
+# =============================================================================
+# Logging Configuration for FastAPI Application
+# =============================================================================
+# This file configures Python's logging system via dictConfig.
+# It provides consistent formatting for both application and Uvicorn logs.
+#
+# Environment Variables:
+#   - LOG_LEVEL: Override the root log level (default: INFO)
+#   - LOG_FILE_ENABLED: Enable file logging (default: false)
+#   - LOG_FILE_PATH: Path to log file (default: logs/app.log)
+# =============================================================================
+
+version: 1
+
+# Don't disable existing loggers - allows third-party libs to log properly
+disable_existing_loggers: false
+
+# =============================================================================
+# FORMATTERS
+# Define how log messages are formatted
+# =============================================================================
+formatters:
+  # Standard format for console and file output
+  # Includes timestamp, level, logger name, and message
+  standard:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  # Detailed format with file/line info - useful for debugging
+  detailed:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s | %(module)s:%(funcName)s:%(lineno)d | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+  # Minimal format for Uvicorn access logs (request/response info)
+  access:
+    format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+
+# =============================================================================
+# HANDLERS
+# Define where log messages are sent (console, file, etc.)
+# =============================================================================
+handlers:
+  # Console handler - outputs to stdout
+  # Used for development and container environments
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: standard
+    stream: ext://sys.stdout
+
+  # File handler - outputs to a rotating log file
+  # Rotates at 10MB, keeps 5 backup files
+  # Enable via LOG_FILE_ENABLED=true environment variable
+  file:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: logs/app.log
+    maxBytes: 10485760  # 10MB
+    backupCount: 5
+    encoding: utf8
+
+# =============================================================================
+# LOGGERS
+# Configure specific loggers and their handlers
+# =============================================================================
+loggers:
+  # Uvicorn's main logger
+  uvicorn:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  # Uvicorn error logger - handles startup/shutdown and errors
+  uvicorn.error:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  # Uvicorn access logger - handles HTTP request/response logs
+  uvicorn.access:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  # Application logger - use this for your app's logging
+  # Example: logger = logging.getLogger("app")
+  app:
+    level: DEBUG
+    handlers: [console]
+    propagate: false
+
+# =============================================================================
+# ROOT LOGGER
+# Catches all logs not handled by specific loggers above
+# =============================================================================
+root:
+  level: INFO
+  handlers: [console]

@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     PORT: int = 8000
     ENV: str = "dev"
 
+    # Logging configuration
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE_ENABLED: bool = False
+    LOG_FILE_PATH: str = "logs/app.log"
+
     # Database settings
     POSTGRES_HOST: str
     POSTGRES_DB: str
@@ -24,11 +29,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
 
-    model_config = ConfigDict(
-        env_file=".env",
-        case_sensitive=True,
-        extra="allow",
-    )
+    model_config = ConfigDict(env_file=".env", case_sensitive=True)
 
     @property
     def get_database_url(self) -> str:
