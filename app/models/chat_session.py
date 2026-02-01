@@ -5,7 +5,7 @@ from typing import Optional, TYPE_CHECKING
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.models.enums import SessionStatus
+from app.enums import SessionStatus
 
 if TYPE_CHECKING:
     from app.models.document import Document
