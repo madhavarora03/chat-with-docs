@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class Message(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="chatsession.id")
+    session_id: UUID = Field(foreign_key="chat_session.id")
     role: Role
     content: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

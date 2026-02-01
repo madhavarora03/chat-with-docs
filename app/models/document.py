@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class Document(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: UUID = Field(foreign_key="chatsession.id")
+    session_id: UUID = Field(foreign_key="chat_session.id")
     filename: str
     file_path: str
     mime_type: str  # TODO: make enum

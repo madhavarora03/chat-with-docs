@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class DocumentChunk(SQLModel, table=True):
+    __tablename__ = "document_chunk"
+
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     document_id: UUID = Field(foreign_key="document.id")
     chunk_index: int
