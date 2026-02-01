@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.models.chat_session import ChatSession
+if TYPE_CHECKING:
+    from app.models.chat_session import ChatSession
 
 
 class User(SQLModel, table=True):

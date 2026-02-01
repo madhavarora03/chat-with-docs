@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from uuid import UUID, uuid4
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.models.chat_session import ChatSession
 from app.models.enums.role import Role
+
+if TYPE_CHECKING:
+    from app.models.chat_session import ChatSession
 
 
 class Message(SQLModel, table=True):
