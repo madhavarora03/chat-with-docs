@@ -1,4 +1,22 @@
 services:
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migration
+    image: chat-with-docs-migration:${IMAGE_TAG:-latest}
+    container_name: chat-migration
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      TZ: Asia/Kolkata
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+
   app:
     build:
       context: .
@@ -16,11 +34,14 @@ services:
       POSTGRES_HOST: postgres
       ENV: prod
       LOG_FILE_ENABLED: true
+      TZ: Asia/Kolkata
     volumes:
       - ./logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
     networks:
       - default
 

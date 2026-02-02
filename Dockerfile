@@ -21,6 +21,17 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ---------------------
+# Migration stage
+# ---------------------
+FROM dependencies AS migration
+
+# Copy application code (needed for alembic env.py imports)
+COPY . .
+
+# Run migrations and exit
+CMD ["alembic", "upgrade", "head"]
+
+# ---------------------
 # Production stage
 # ---------------------
 FROM dependencies AS production
