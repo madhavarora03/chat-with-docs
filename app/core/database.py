@@ -12,7 +12,7 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 settings = get_settings()
 
-engine = create_engine(settings.get_database_url, echo=False)
+engine = create_engine(settings.database_url, echo=False)
 
 
 def get_session():
@@ -22,14 +22,14 @@ def get_session():
 
 @retry(
     stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
+    wait=wait_exponential(multiplier=2, min=2, max=10),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
 def ping_db() -> bool:
     """
     Check database connectivity by executing a simple query.
-    
+
     Retries up to 3 times with exponential backoff (2s, 4s, 8s).
 
     Returns:

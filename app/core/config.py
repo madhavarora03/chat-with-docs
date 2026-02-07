@@ -32,7 +32,13 @@ class Settings(BaseSettings):
     model_config = ConfigDict(env_file=".env", case_sensitive=True)
 
     @property
-    def get_database_url(self) -> str:
+    def is_dev(self) -> bool:
+        """Check if running in development environment."""
+        return self.ENV == "dev"
+
+    @property
+    def database_url(self) -> str:
+        """Database connection URL"""
         return (
             f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
