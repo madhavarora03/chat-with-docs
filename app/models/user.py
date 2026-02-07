@@ -7,6 +7,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from app.models.chat_session import ChatSession
+    from app.models.refresh_token import RefreshToken
 
 
 class User(SQLModel, table=True):
@@ -19,3 +20,4 @@ class User(SQLModel, table=True):
 
     # Relationships
     sessions: list["ChatSession"] = Relationship(back_populates="user")
+    refresh_tokens: list["RefreshToken"] = Relationship(back_populates="user")
