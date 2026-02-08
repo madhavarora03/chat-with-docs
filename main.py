@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 
 from app.core.config import get_settings
-from app.core.database import ping_db, dispose_engine
-from app.utils.logger import setup_logging, get_logger, get_uvicorn_log_config
+from app.core.database import dispose_engine, ping_db
+from app.utils.logger import get_logger, get_uvicorn_log_config, setup_logging
 
 # Initialize logging FIRST - before any other operations
 # This ensures all loggers (app + uvicorn) use our config

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
+
 import sqlalchemy as sa
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -15,23 +16,30 @@ if TYPE_CHECKING:
 
 
 class ChatSession(SQLModel, table=True):
-    __tablename__ = "chat_session"
+    __tablename__ = "chat_sessions"
 
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    user_id: UUID = Field(foreign_key="user.id")
-    title: str
-    last_active_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
+    user_id: UUID = Field(foreign_key="users.id", nullable=False)
+    title: str = Field(..., nullable=False)
+    last_active_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
     status: SessionStatus = Field(
-        sa_column=sa.Column(sa.Enum(SessionStatus, name="session_status")),
+        sa_column=sa.Column(
+            sa.Enum(SessionStatus, name="session_status"), nullable=False
+        ),
         default=SessionStatus.ACTIVE,
     )
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
     # Relationships
     user: Optional[User] = Relationship(back_populates="sessions")
     document: Optional["Document"] = Relationship(
-        back_populates="session",
-        sa_relationship_kwargs={"uselist": False},
+        back_populates="session", sa_relationship_kwargs={"uselist": False}
     )
     messages: list["Message"] = Relationship(back_populates="session")
