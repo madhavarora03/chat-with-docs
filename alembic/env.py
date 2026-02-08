@@ -3,6 +3,7 @@ from logging.config import fileConfig
 
 from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import URL
 from sqlmodel import SQLModel
 
 import app.models  # noqa: F401
@@ -24,9 +25,16 @@ def get_database_url() -> str:
     password = os.getenv("POSTGRES_PASSWORD")
     db_name = os.getenv("POSTGRES_DB")
     host = os.getenv("POSTGRES_HOST", "localhost")
-    port = os.getenv("POSTGRES_PORT", "5432")
+    port = os.getenv("POSTGRES_PORT")
     if user and password and db_name:
-        return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db_name}"
+        return URL.create(
+            drivername="postgresql+psycopg2",
+            username=user,
+            password=password,
+            host=host,
+            port=int(port) if port else None,
+            database=db_name,
+        ).render_as_string(hide_password=False)
 
     return config.get_main_option("sqlalchemy.url")
 

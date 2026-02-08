@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
+import sqlalchemy as sa
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
@@ -12,9 +13,10 @@ if TYPE_CHECKING:
 
 class DocumentChunk(SQLModel, table=True):
     __tablename__ = "document_chunks"
+    __table_args__ = (sa.Index("ix_document_chunks_document_id_chunk_index", "document_id", "chunk_index"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
-    document_id: UUID = Field(foreign_key="documents.id", nullable=False)
+    document_id: UUID = Field(foreign_key="documents.id", nullable=False, index=True)
     chunk_index: int = Field(..., nullable=False)
     page_start: int = Field(..., nullable=False)
     page_end: int = Field(..., nullable=False)

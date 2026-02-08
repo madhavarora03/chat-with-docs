@@ -6,16 +6,19 @@ services:
       target: migration
     image: chat-with-docs-migration:${IMAGE_TAG:-latest}
     container_name: chat-migration
-    env_file:
-      - .env
     environment:
       POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
       TZ: Asia/Kolkata
     depends_on:
       postgres:
         condition: service_healthy
     networks:
-      - default
+      - app_net
+      - db_net
 
   app:
     build:
@@ -27,30 +30,46 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8000}:8000"
-    env_file:
-      - .env
     environment:
-      # Override for Docker networking
-      POSTGRES_HOST: postgres
-      ENV: prod
-      LOG_FILE_ENABLED: true
+      # Runtime variables
+      ENV: ${ENV}
+      HOST: ${HOST}
+      PORT: ${PORT}
+      # Logging configuration
+      LOG_LEVEL: ${LOG_LEVEL}
+      LOG_FILE_ENABLED: ${LOG_FILE_ENABLED}
+      LOG_FILE_PATH: ${LOG_FILE_PATH}
       TZ: Asia/Kolkata
+      # Postgres values
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
       - ./logs:/app/logs
+    read_only: true
+    tmpfs:
+      - /tmp
     depends_on:
       postgres:
         condition: service_healthy
       migration:
         condition: service_completed_successfully
     networks:
-      - default
+      - app_net
+      - db_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
 
   postgres:
     image: postgres:16-alpine
     container_name: chat-postgres
     restart: unless-stopped
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -63,11 +82,14 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - default
+      - db_net
 
 volumes:
   postgres_data:
 
 networks:
-  default:
+  app_net:
     name: chat-with-docs
+  db_net:
+    name: chat-with-docs-db
+    internal: true

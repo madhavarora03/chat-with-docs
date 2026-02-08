@@ -19,7 +19,7 @@ class ChatSession(SQLModel, table=True):
     __tablename__ = "chat_sessions"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
-    user_id: UUID = Field(foreign_key="users.id", nullable=False)
+    user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True)
     title: str = Field(..., nullable=False)
     last_active_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False

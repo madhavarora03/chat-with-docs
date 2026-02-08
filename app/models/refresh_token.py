@@ -14,7 +14,7 @@ class RefreshToken(SQLModel, table=True):
     __tablename__ = "refresh_tokens"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
-    user_id: UUID = Field(foreign_key="users.id", nullable=False)
+    user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True)
     token_hash: str = Field(index=True, unique=True, nullable=False)
     expires_at: datetime = Field(..., nullable=False)
     revoked_at: Optional[datetime]

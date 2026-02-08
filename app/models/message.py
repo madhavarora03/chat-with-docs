@@ -16,7 +16,7 @@ class Message(SQLModel, table=True):
     __tablename__ = "messages"
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
-    session_id: UUID = Field(foreign_key="chat_sessions.id", nullable=False)
+    session_id: UUID = Field(foreign_key="chat_sessions.id", nullable=False, index=True)
     role: Role = Field(..., nullable=False)
     content: str = Field(..., nullable=False)
     created_at: datetime = Field(
