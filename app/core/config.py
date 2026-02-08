@@ -2,6 +2,7 @@ from functools import cache
 
 from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
+from sqlalchemy.engine import URL
 
 
 class Settings(BaseSettings):
@@ -38,11 +39,15 @@ class Settings(BaseSettings):
         return self.ENV == "dev"
 
     @property
-    def database_url(self) -> str:
+    def database_url(self) -> URL:
         """Database connection URL"""
-        return (
-            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        return URL.create(
+            drivername="postgresql+psycopg2",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=self.POSTGRES_DB,
         )
 
 
