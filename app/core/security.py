@@ -10,10 +10,12 @@ from pwdlib import PasswordHash
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.core.config import get_settings
+from app.utils.logger import get_logger
 
 password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 settings = get_settings()
+logger = get_logger(__name__)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -80,6 +82,7 @@ def decode_access_token(token: str) -> dict[str, Any]:
         return payload
 
     except jwt.PyJWTError as exc:
+        logger.warning("Access token decode failed: %s", exc.__class__.__name__)
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
