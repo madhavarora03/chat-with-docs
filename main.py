@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 
+from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.database import dispose_engine, ping_db
 from app.utils.logger import get_logger, get_uvicorn_log_config, setup_logging
@@ -37,6 +38,7 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_dev else None,
     openapi_url="/openapi.json" if settings.is_dev else None,
 )
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.middleware("http")
@@ -55,11 +57,6 @@ async def log_request_time(request: Request, call_next):
     response.headers["X-Process-Time"] = f"{process_time_ms:.2f}ms"
 
     return response
-
-
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
 
 
 if __name__ == "__main__":

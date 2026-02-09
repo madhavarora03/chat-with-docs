@@ -7,7 +7,7 @@ from sqlalchemy.engine import URL
 
 class Settings(BaseSettings):
     # App metadata
-    APP_TITLE: str = "Chat Karo Baabeyo!"
+    APP_TITLE: str = "Chat With Docs API"
     APP_DESCRIPTION: str = (
         "API for chatting with uploaded documents using "
         "session-isolated RAG and vector search."
