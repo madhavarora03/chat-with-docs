@@ -31,6 +31,16 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
 
+    # JWT settings (expiry in minutes)
+    JWT_ACCESS_SECRET: str
+    JWT_ACCESS_EXPIRES_MINUTES: int
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ISSUER: str | None = None
+
+    # Refresh token settings (opaque tokens stored hashed in DB)
+    REFRESH_TOKEN_BYTES: int = 32
+    REFRESH_TOKEN_EXPIRES_DAYS: int = 10
+
     model_config = ConfigDict(env_file=".env", case_sensitive=True)
 
     @property
