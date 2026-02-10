@@ -82,7 +82,13 @@ class AuthService:
         self.session.refresh(user)
         return user
 
-    def refresh_access_token(self, refresh_token: str) -> str:
+    def refresh_tokens(self, refresh_token: str) -> tuple[str, str]:
+        """
+        Rotate refresh token and issue new access token.
+
+        Returns:
+            Tuple of (access_token, new_refresh_token)
+        """
         token_hash = security.hash_refresh_token(refresh_token)
         stmt = select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
@@ -107,7 +113,17 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        return self.create_access_token(user)
+        # Revoke old refresh token
+        stored_token.revoked_at = datetime.now(timezone.utc)
+        self.session.add(stored_token)
+        self.session.commit()
+
+        # Issue new tokens
+        access_token = self.create_access_token(user)
+        new_refresh_token = self.issue_refresh_token(user)
+
+        logger.debug("Rotated refresh token for user_id=%s", user.id)
+        return access_token, new_refresh_token
 
     def revoke_refresh_token(self, token_id: UUID) -> None:
         token = self.session.get(RefreshToken, token_id)
