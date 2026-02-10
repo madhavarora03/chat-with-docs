@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 import jwt
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
 from starlette.status import HTTP_401_UNAUTHORIZED
@@ -13,7 +13,7 @@ from app.core.config import get_settings
 from app.utils.logger import get_logger
 
 password_hash = PasswordHash.recommended()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 settings = get_settings()
 logger = get_logger(__name__)
 
@@ -61,7 +61,7 @@ def create_access_token(
 def decode_access_token(token: str) -> dict[str, Any]:
     options = {"require": ["exp", "sub"]}
     decode_kwargs: dict[str, Any] = {
-        "token": token,
+        "jwt": token,
         "key": settings.JWT_ACCESS_SECRET,
         "algorithms": [settings.JWT_ALGORITHM],
         "options": options,
@@ -98,10 +98,6 @@ def hash_refresh_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def verify_refresh_token(token: str, token_hash: str) -> bool:
-    return secrets.compare_digest(hash_refresh_token(token), token_hash)
-
-
 def refresh_token_expires_at(
     issued_at: Optional[datetime] = None,
     expires_days: Optional[int] = None,
@@ -111,4 +107,17 @@ def refresh_token_expires_at(
         days=expires_days
         if expires_days is not None
         else settings.REFRESH_TOKEN_EXPIRES_DAYS
+    )
+
+
+def set_refresh_token_cookie(response: Response, refresh_token: str) -> None:
+    max_age = settings.REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=not settings.is_dev,
+        samesite="lax",
+        max_age=max_age,
+        path="/api/v1/auth",
     )
