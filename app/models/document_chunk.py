@@ -18,7 +18,7 @@ class DocumentChunk(SQLModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
-    document_id: UUID = Field(foreign_key="documents.id", nullable=False, index=True)
+    document_id: UUID = Field(foreign_key="documents.id", nullable=False)
     chunk_index: int = Field(..., nullable=False)
     page_start: int = Field(..., nullable=False)
     page_end: int = Field(..., nullable=False)
