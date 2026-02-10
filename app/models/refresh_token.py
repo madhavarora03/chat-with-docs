@@ -15,7 +15,7 @@ class RefreshToken(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True)
     token_hash: str = Field(index=True, unique=True, nullable=False)
     expires_at: datetime = Field(..., nullable=False)
-    revoked_at: Optional[datetime]
+    revoked_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )
