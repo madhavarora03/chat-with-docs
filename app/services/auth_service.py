@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
@@ -27,10 +25,31 @@ class AuthService:
             security.hash_password("dummy")
             logger.warning("Authentication failed: invalid credentials")
             return None
-        if not self.verify_password(password, user.hashed_password):
+        if not self.verify_password(password, user.password):
             logger.warning("Authentication failed: invalid credentials")
             return None
         return user
+
+    def login(self, email: str, password: str) -> tuple[str, str]:
+        """Authenticate user and issue tokens.
+
+        Returns:
+            Tuple of (access_token, refresh_token)
+
+        Raises:
+            HTTPException: If credentials are invalid.
+        """
+        user = self.authenticate_user(email, password)
+        if not user:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        access_token = self.create_access_token(user)
+        refresh_token = self.issue_refresh_token(user)
+        logger.info("Login successful for user_id=%s", user.id)
+        return access_token, refresh_token
 
     def get_user_by_email(self, email: str) -> Optional[User]:
         stmt = select(User).where(User.email == email)
@@ -49,7 +68,7 @@ class AuthService:
         logger.debug("Issuing access token for user_id=%s", user.id)
         return security.create_access_token(subject=str(user.id))
 
-    def issue_refresh_token(self, user: User) -> str:
+    def issue_refresh_token(self, user: User, *, commit: bool = True) -> str:
         raw_token = security.create_refresh_token()
         token_hash = security.hash_refresh_token(raw_token)
         expires_at = security.refresh_token_expires_at()
@@ -59,7 +78,8 @@ class AuthService:
         )
 
         self.session.add(refresh_token)
-        self.session.commit()
+        if commit:
+            self.session.commit()
 
         logger.debug("Issued refresh token for user_id=%s", user.id)
         return raw_token
@@ -75,7 +95,7 @@ class AuthService:
         user = User(
             email=email,
             name=name,
-            hashed_password=self.hash_password(password),
+            password=self.hash_password(password),
         )
         self.session.add(user)
         self.session.commit()
@@ -113,14 +133,13 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        # Revoke old refresh token
+        # Revoke old token and issue new one in a single transaction
         stored_token.revoked_at = datetime.now(timezone.utc)
         self.session.add(stored_token)
+        new_refresh_token = self.issue_refresh_token(user, commit=False)
         self.session.commit()
 
-        # Issue new tokens
         access_token = self.create_access_token(user)
-        new_refresh_token = self.issue_refresh_token(user)
 
         logger.debug("Rotated refresh token for user_id=%s", user.id)
         return access_token, new_refresh_token
