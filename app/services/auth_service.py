@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException
 from sqlmodel import Session, select
-from starlette.status import HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT
 
 from app.core import security
 from app.core.database import SessionDep
@@ -23,10 +23,12 @@ class AuthService:
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
         user = self.get_user_by_email(email)
         if not user:
-            logger.warning("Authentication failed: user not found")
+            # Run hash anyway to prevent timing-based user enumeration
+            security.hash_password("dummy")
+            logger.warning("Authentication failed: invalid credentials")
             return None
-        if not self.verify_password(password, user.password):
-            logger.warning("Authentication failed: invalid password")
+        if not self.verify_password(password, user.hashed_password):
+            logger.warning("Authentication failed: invalid credentials")
             return None
         return user
 
@@ -62,27 +64,38 @@ class AuthService:
         logger.debug("Issued refresh token for user_id=%s", user.id)
         return raw_token
 
+    def create_user(self, email: str, name: str, password: str) -> User:
+        existing_user = self.get_user_by_email(email)
+        if existing_user:
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail="Email already registered",
+            )
+
+        user = User(
+            email=email,
+            name=name,
+            hashed_password=self.hash_password(password),
+        )
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
+
     def refresh_access_token(self, refresh_token: str) -> str:
         token_hash = security.hash_refresh_token(refresh_token)
         stmt = select(RefreshToken).where(
             RefreshToken.token_hash == token_hash,
             RefreshToken.expires_at > datetime.now(timezone.utc),
+            RefreshToken.revoked_at.is_(None),
         )
         stored_token = self.session.exec(stmt).first()
 
         if not stored_token:
-            logger.warning("Refresh token invalid or expired")
+            logger.warning("Refresh token invalid, expired, or revoked")
             raise HTTPException(
                 status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-        if stored_token.revoked_at is not None:
-            logger.warning("Refresh token revoked")
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Refresh token revoked",
+                detail="Invalid or expired refresh token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
@@ -154,7 +167,7 @@ class AuthService:
         return user
 
 
-def get_auth_service(session: Session = Depends(SessionDep)) -> AuthService:
+def get_auth_service(session: SessionDep) -> AuthService:
     return AuthService(session)
 
 
