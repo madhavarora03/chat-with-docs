@@ -2,12 +2,17 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from sqlmodel import Session, select
-from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT
 
 from app.core import security
 from app.core.database import SessionDep
+from app.exceptions import (
+    DuplicateEmailError,
+    InvalidCredentialsError,
+    InvalidTokenError,
+    UserNotFoundError,
+)
 from app.models import RefreshToken, User
 from app.utils.logger import get_logger
 
@@ -37,15 +42,11 @@ class AuthService:
             Tuple of (access_token, refresh_token)
 
         Raises:
-            HTTPException: If credentials are invalid.
+            InvalidCredentialsError: If credentials are invalid.
         """
         user = self.authenticate_user(email, password)
         if not user:
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidCredentialsError()
         access_token = self.create_access_token(user)
         refresh_token = self.issue_refresh_token(user)
         logger.info("Login successful for user_id=%s", user.id)
@@ -87,10 +88,7 @@ class AuthService:
     def create_user(self, email: str, name: str, password: str) -> User:
         existing_user = self.get_user_by_email(email)
         if existing_user:
-            raise HTTPException(
-                status_code=HTTP_409_CONFLICT,
-                detail="Email already registered",
-            )
+            raise DuplicateEmailError()
 
         user = User(
             email=email,
@@ -119,19 +117,11 @@ class AuthService:
 
         if not stored_token:
             logger.warning("Refresh token invalid, expired, or revoked")
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid or expired refresh token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidTokenError("Invalid or expired refresh token")
 
         user = self.get_user_by_id(stored_token.user_id)
         if not user:
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise UserNotFoundError()
 
         # Revoke old token and issue new one in a single transaction
         stored_token.revoked_at = datetime.now(timezone.utc)
@@ -174,30 +164,18 @@ class AuthService:
         payload = self.decode_access_token(token)
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid token subject",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidTokenError("Invalid token subject")
 
         try:
             user_id = UUID(user_id)
         except ValueError:
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid token subject",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidTokenError("Invalid token subject")
 
         user = self.get_user_by_id(user_id)
 
         if not user:
             logger.warning("User not found for token subject=%s", user_id)
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise UserNotFoundError()
 
         return user
 
@@ -210,4 +188,14 @@ def get_current_user(
     token: str = Depends(security.oauth2_scheme),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
-    return auth_service.get_current_user(token)
+    from fastapi import HTTPException
+    from starlette.status import HTTP_401_UNAUTHORIZED
+
+    try:
+        return auth_service.get_current_user(token)
+    except (InvalidTokenError, UserNotFoundError) as exc:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail=exc.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc

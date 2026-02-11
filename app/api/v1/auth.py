@@ -1,8 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
-from starlette.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_409_CONFLICT
 
 from app.core import security
+from app.exceptions import (
+    DuplicateEmailError,
+    InvalidCredentialsError,
+    InvalidTokenError,
+    UserNotFoundError,
+)
 from app.models import User
 from app.schemas import (
     LoginRequest,
@@ -31,9 +37,16 @@ def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-    access_token, refresh_token = auth_service.login(
-        form_data.username, form_data.password
-    )
+    try:
+        access_token, refresh_token = auth_service.login(
+            form_data.username, form_data.password
+        )
+    except InvalidCredentialsError as exc:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail=exc.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
     security.set_refresh_token_cookie(response, refresh_token)
     return TokenResponse(access_token=access_token)
 
@@ -44,9 +57,16 @@ def login_with_body(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
-    access_token, refresh_token = auth_service.login(
-        credentials.email, credentials.password
-    )
+    try:
+        access_token, refresh_token = auth_service.login(
+            credentials.email, credentials.password
+        )
+    except InvalidCredentialsError as exc:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail=exc.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
     security.set_refresh_token_cookie(response, refresh_token)
     return TokenResponse(access_token=access_token)
 
@@ -57,11 +77,14 @@ def signup(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
 ) -> SignupResponse:
-    user = auth_service.create_user(
-        email=payload.email,
-        name=payload.name,
-        password=payload.password,
-    )
+    try:
+        user = auth_service.create_user(
+            email=payload.email,
+            name=payload.name,
+            password=payload.password,
+        )
+    except DuplicateEmailError as exc:
+        raise HTTPException(status_code=HTTP_409_CONFLICT, detail=exc.message) from exc
 
     access_token = auth_service.create_access_token(user)
     refresh_token = auth_service.issue_refresh_token(user)
@@ -87,7 +110,14 @@ def refresh(
             detail="Missing refresh token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token, new_refresh_token = auth_service.refresh_tokens(refresh_token)
+    try:
+        access_token, new_refresh_token = auth_service.refresh_tokens(refresh_token)
+    except (InvalidTokenError, UserNotFoundError) as exc:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail=exc.message,
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from exc
     security.set_refresh_token_cookie(response, new_refresh_token)
     logger.info("Tokens rotated successfully")
     return TokenResponse(access_token=access_token)

@@ -4,12 +4,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 import jwt
-from fastapi import HTTPException, Response
+from fastapi import Response
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
-from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.core.config import get_settings
+from app.exceptions import InvalidTokenError
 from app.utils.logger import get_logger
 
 password_hash = PasswordHash.recommended()
@@ -74,20 +74,12 @@ def decode_access_token(token: str) -> dict[str, Any]:
     try:
         payload = jwt.decode(**decode_kwargs)
         if payload.get("typ") != "access":
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid token type",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+            raise InvalidTokenError("Invalid token type")
         return payload
 
     except jwt.PyJWTError as exc:
         logger.warning("Access token decode failed: %s", exc.__class__.__name__)
-        raise HTTPException(
-            status_code=HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        ) from exc
+        raise InvalidTokenError("Invalid or expired token") from exc
 
 
 def create_refresh_token() -> str:
