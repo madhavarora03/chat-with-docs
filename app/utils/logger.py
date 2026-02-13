@@ -240,7 +240,7 @@ def get_uvicorn_log_config() -> dict:
         setup_logging()
 
         uvicorn.run(
-            "main:app",
+            "app.main:app",
             host="0.0.0.0",
             port=8000,
             log_config=get_uvicorn_log_config(),
