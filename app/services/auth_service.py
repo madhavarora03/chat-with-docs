@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from fastapi import Depends
@@ -23,7 +23,7 @@ class AuthService:
     def __init__(self, session: Session):
         self.session = session
 
-    def authenticate_user(self, email: str, password: str) -> Optional[User]:
+    def authenticate_user(self, email: str, password: str) -> User | None:
         user = self.get_user_by_email(email)
         if not user:
             # Run hash anyway to prevent timing-based user enumeration
@@ -52,11 +52,11 @@ class AuthService:
         logger.info("Login successful for user_id=%s", user.id)
         return access_token, refresh_token
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
+    def get_user_by_email(self, email: str) -> User | None:
         stmt = select(User).where(User.email == email)
         return self.session.exec(stmt).first()
 
-    def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+    def get_user_by_id(self, user_id: UUID) -> User | None:
         return self.session.get(User, user_id)
 
     def hash_password(self, password: str) -> str:

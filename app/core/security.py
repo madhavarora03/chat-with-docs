@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 import jwt
 from fastapi import Response
@@ -28,8 +28,8 @@ def hash_password(password: str) -> str:
 
 def create_access_token(
     subject: str,
-    expire_minutes: Optional[int] = None,
-    additional_claims: Optional[dict[str, Any]] = None,
+    expire_minutes: int | None = None,
+    additional_claims: dict[str, Any] | None = None,
 ) -> str:
     issued_at = datetime.now(timezone.utc)
     expires_at = issued_at + timedelta(
@@ -91,8 +91,8 @@ def hash_refresh_token(token: str) -> str:
 
 
 def refresh_token_expires_at(
-    issued_at: Optional[datetime] = None,
-    expires_days: Optional[int] = None,
+    issued_at: datetime | None = None,
+    expires_days: int | None = None,
 ) -> datetime:
     base_time = issued_at if issued_at is not None else datetime.now(timezone.utc)
     return base_time + timedelta(

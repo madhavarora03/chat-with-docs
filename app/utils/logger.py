@@ -23,7 +23,6 @@ Usage:
 import logging
 import logging.config
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -123,7 +122,7 @@ def _apply_settings_overrides(config: dict) -> dict:
     return config
 
 
-def setup_logging(config_path: Optional[str] = None) -> None:
+def setup_logging(config_path: str | None = None) -> None:
     """
     Initialize the logging system with configuration from YAML file.
 
@@ -132,7 +131,7 @@ def setup_logging(config_path: Optional[str] = None) -> None:
     application loggers and Uvicorn's loggers for consistent formatting.
 
     Args:
-        config_path: Optional path to the logging config file.
+        config_path: Path to the logging config file, or None for default.
                     Defaults to 'logging.yaml' in project root.
 
     Example:
@@ -223,7 +222,7 @@ def get_logger(name: str) -> logging.Logger:
 # =============================================================================
 
 
-def get_uvicorn_log_config() -> dict:
+def get_uvicorn_log_config() -> dict | None:
     """
     Get logging configuration for Uvicorn's log_config parameter.
 

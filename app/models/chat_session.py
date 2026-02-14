@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -36,8 +38,8 @@ class ChatSession(SQLModel, table=True):
     )
 
     # Relationships
-    user: Optional["User"] = Relationship(back_populates="sessions")
-    document: Optional["Document"] = Relationship(
+    user: User | None = Relationship(back_populates="sessions")
+    document: Document | None = Relationship(
         back_populates="session", sa_relationship_kwargs={"uselist": False}
     )
     messages: list["Message"] = Relationship(back_populates="session")

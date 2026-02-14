@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -25,4 +27,4 @@ class Message(SQLModel, table=True):
     )
 
     # Relationships
-    session: Optional["ChatSession"] = Relationship(back_populates="messages")
+    session: ChatSession | None = Relationship(back_populates="messages")
