@@ -1,7 +1,6 @@
 from functools import cache
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
 
@@ -41,7 +40,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_BYTES: int = 32
     REFRESH_TOKEN_EXPIRES_DAYS: int = 10
 
-    model_config = ConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
     @property
     def is_dev(self) -> bool:
@@ -63,4 +62,4 @@ class Settings(BaseSettings):
 
 @cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # type: ignore[call-arg]
