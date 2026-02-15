@@ -108,7 +108,7 @@ def set_refresh_token_cookie(response: Response, refresh_token: str) -> None:
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=not settings.is_dev,
+        secure=settings.is_production,
         samesite="lax",
         max_age=max_age,
         path="/api/v1/auth",

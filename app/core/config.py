@@ -49,6 +49,11 @@ class Settings(BaseSettings):
         return self.ENV == "dev"
 
     @property
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.ENV == "prod"
+
+    @property
     def database_url(self) -> URL:
         """Database connection URL"""
         return URL.create(
