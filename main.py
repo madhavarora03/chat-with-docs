@@ -7,7 +7,7 @@ settings = get_settings()
 logger = get_logger(__name__)
 
 if __name__ == "__main__":
-    logger.info(f"Starting server on {settings.HOST}:{settings.PORT}")
+    logger.info("Starting server on %s:%s", settings.HOST, settings.PORT)
 
     uvicorn.run(
         app="app.main:app",

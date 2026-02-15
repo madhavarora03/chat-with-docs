@@ -8,16 +8,15 @@ from app.core.config import get_settings
 from app.core.database import dispose_engine, ping_db
 from app.utils.logger import get_logger, setup_logging
 
-# Initialize logging FIRST - before any other operations
-# This ensures all loggers (app + uvicorn) use our config
-setup_logging()
-
 settings = get_settings()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize logging FIRST - before any other startup operations
+    setup_logging()
+
     # Startup: verify database connection
     ping_db()
     logger.info("Application startup complete")
@@ -50,10 +49,12 @@ async def log_request_time(request: Request, call_next):
 
     process_time_ms = (time.perf_counter() - start_time) * 1000
     logger.info(
-        f"{request.method} {request.url.path} - {response.status_code} - {process_time_ms:.2f}ms"
+        "%s %s - %s - %.2fms",
+        request.method, request.url.path, response.status_code, process_time_ms,
     )
 
     # Optionally add timing header for debugging
-    response.headers["X-Process-Time"] = f"{process_time_ms:.2f}ms"
+    if settings.is_dev:
+        response.headers["X-Process-Time"] = f"{process_time_ms:.2f}ms"
 
     return response

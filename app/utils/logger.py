@@ -166,7 +166,7 @@ def setup_logging(config_path: str | None = None) -> None:
 
         # Log successful initialization
         logger = logging.getLogger("app")
-        logger.debug(f"Logging configured from: {config_path}")
+        logger.debug("Logging configured from: %s", config_path)
 
     except FileNotFoundError:
         # Fall back to basic configuration if YAML file not found
@@ -176,7 +176,7 @@ def setup_logging(config_path: str | None = None) -> None:
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         logging.warning(
-            f"Logging config file not found: {config_path}. Using basic config."
+            "Logging config file not found: %s. Using basic config.", config_path
         )
 
     except Exception as e:
@@ -186,7 +186,7 @@ def setup_logging(config_path: str | None = None) -> None:
             format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        logging.error(f"Failed to load logging config: {e}. Using basic config.")
+        logging.error("Failed to load logging config: %s. Using basic config.", e)
 
 
 def get_logger(name: str) -> logging.Logger:
