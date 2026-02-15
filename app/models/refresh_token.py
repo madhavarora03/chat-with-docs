@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, Relationship, SQLModel
@@ -26,4 +24,4 @@ class RefreshToken(SQLModel, table=True):
     )
 
     # Relationship: refresh_token -> user
-    user: User | None = Relationship(back_populates="refresh_tokens")
+    user: Optional["User"] = Relationship(back_populates="refresh_tokens")

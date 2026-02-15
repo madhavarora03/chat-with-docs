@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -33,4 +31,4 @@ class DocumentChunk(SQLModel, table=True):
     )
 
     # Relationships
-    document: Document | None = Relationship(back_populates="chunks")
+    document: Optional["Document"] = Relationship(back_populates="chunks")
