@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
+    POSTGRES_TEST_DB: str = "chat_with_docs_test"
 
     # JWT settings (expiry in minutes)
     JWT_ACCESS_SECRET: str
@@ -57,6 +58,18 @@ class Settings(BaseSettings):
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
             database=self.POSTGRES_DB,
+        )
+
+    @property
+    def test_database_url(self) -> URL:
+        """Test database connection URL"""
+        return URL.create(
+            drivername="postgresql+psycopg2",
+            username=self.POSTGRES_USER,
+            password=self.POSTGRES_PASSWORD,
+            host=self.POSTGRES_HOST,
+            port=self.POSTGRES_PORT,
+            database=self.POSTGRES_TEST_DB,
         )
 
 
