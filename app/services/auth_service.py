@@ -134,16 +134,6 @@ class AuthService:
         logger.debug("Rotated refresh token for user_id=%s", user.id)
         return access_token, new_refresh_token
 
-    def revoke_refresh_token(self, token_id: UUID) -> None:
-        token = self.session.get(RefreshToken, token_id)
-        if not token or token.revoked_at is not None:
-            logger.debug("Refresh token already revoked or missing")
-            return
-        token.revoked_at = datetime.now(timezone.utc)
-        self.session.add(token)
-        self.session.commit()
-        logger.info("Revoked refresh token token_id=%s", token_id)
-
     def revoke_all_user_tokens(self, user_id: UUID) -> int:
         stmt = select(RefreshToken).where(
             RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None)

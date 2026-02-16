@@ -50,7 +50,10 @@ async def log_request_time(request: Request, call_next):
     process_time_ms = (time.perf_counter() - start_time) * 1000
     logger.info(
         "%s %s - %s - %.2fms",
-        request.method, request.url.path, response.status_code, process_time_ms,
+        request.method,
+        request.url.path,
+        response.status_code,
+        process_time_ms,
     )
 
     # Optionally add timing header for debugging
