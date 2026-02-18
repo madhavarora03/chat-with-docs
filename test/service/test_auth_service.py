@@ -1,6 +1,7 @@
 import pytest
 from sqlmodel import Session
 
+from app.core import security
 from app.exceptions import (
     DuplicateEmailError,
     InvalidCredentialsError,
@@ -109,7 +110,7 @@ def test_revoke_all_user_tokens(auth_service: AuthService, test_user: User):
 
 # ─── get_current_user ───
 def test_get_current_user_success(auth_service: AuthService, test_user: User):
-    access_token = auth_service.create_access_token(test_user)
+    access_token = security.create_access_token(subject=str(test_user.id))
     user = auth_service.get_current_user(access_token)
     assert user.id == test_user.id
 

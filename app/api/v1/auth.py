@@ -86,7 +86,7 @@ def signup(
     except DuplicateEmailError as exc:
         raise HTTPException(status_code=HTTP_409_CONFLICT, detail=exc.message) from exc
 
-    access_token = auth_service.create_access_token(user)
+    access_token = security.create_access_token(subject=str(user.id))
     refresh_token = auth_service.issue_refresh_token(user)
     security.set_refresh_token_cookie(response, refresh_token)
     logger.info("Signup successful for user_id=%s", user.id)

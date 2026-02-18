@@ -31,6 +31,7 @@ def create_access_token(
     expire_minutes: int | None = None,
     additional_claims: dict[str, Any] | None = None,
 ) -> str:
+    logger.debug("Issuing access token for subject=%s", subject)
     issued_at = datetime.now(timezone.utc)
     expires_at = issued_at + timedelta(
         minutes=expire_minutes

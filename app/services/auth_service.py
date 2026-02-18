@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Any
 from uuid import UUID
 
 from fastapi import Depends
@@ -20,7 +19,7 @@ logger = get_logger(__name__)
 
 
 class AuthService:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session) -> None:
         self.session = session
 
     def authenticate_user(self, email: str, password: str) -> User | None:
@@ -30,7 +29,7 @@ class AuthService:
             security.hash_password("dummy")
             logger.warning("Authentication failed: invalid credentials")
             return None
-        if not self.verify_password(password, user.password):
+        if not security.verify_password(password, user.password):
             logger.warning("Authentication failed: invalid credentials")
             return None
         return user
@@ -47,7 +46,7 @@ class AuthService:
         user = self.authenticate_user(email, password)
         if not user:
             raise InvalidCredentialsError()
-        access_token = self.create_access_token(user)
+        access_token = security.create_access_token(subject=str(user.id))
         refresh_token = self.issue_refresh_token(user)
         logger.info("Login successful for user_id=%s", user.id)
         return access_token, refresh_token
@@ -58,16 +57,6 @@ class AuthService:
 
     def get_user_by_id(self, user_id: UUID) -> User | None:
         return self.session.get(User, user_id)
-
-    def hash_password(self, password: str) -> str:
-        return security.hash_password(password)
-
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return security.verify_password(plain_password, hashed_password)
-
-    def create_access_token(self, user: User) -> str:
-        logger.debug("Issuing access token for user_id=%s", user.id)
-        return security.create_access_token(subject=str(user.id))
 
     def issue_refresh_token(self, user: User, *, commit: bool = True) -> str:
         raw_token = security.create_refresh_token()
@@ -93,7 +82,7 @@ class AuthService:
         user = User(
             email=email,
             name=name,
-            password=self.hash_password(password),
+            password=security.hash_password(password),
         )
         self.session.add(user)
         self.session.commit()
@@ -129,7 +118,7 @@ class AuthService:
         new_refresh_token = self.issue_refresh_token(user, commit=False)
         self.session.commit()
 
-        access_token = self.create_access_token(user)
+        access_token = security.create_access_token(subject=str(user.id))
 
         logger.debug("Rotated refresh token for user_id=%s", user.id)
         return access_token, new_refresh_token
@@ -147,11 +136,8 @@ class AuthService:
         logger.info("Revoked %d refresh tokens for user_id=%s", len(tokens), user_id)
         return len(tokens)
 
-    def decode_access_token(self, token: str) -> dict[str, Any]:
-        return security.decode_access_token(token)
-
     def get_current_user(self, token: str) -> User:
-        payload = self.decode_access_token(token)
+        payload = security.decode_access_token(token)
         user_id = payload.get("sub")
         if not user_id:
             raise InvalidTokenError("Invalid token subject")
