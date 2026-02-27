@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from sqlmodel import Session
 
@@ -6,6 +8,7 @@ from app.exceptions import (
     DuplicateEmailError,
     InvalidCredentialsError,
     InvalidTokenError,
+    UserNotFoundError,
 )
 from app.models import User
 from app.services.auth_service import AuthService
@@ -118,3 +121,15 @@ def test_get_current_user_success(auth_service: AuthService, test_user: User) ->
 def test_get_current_user_invalid_token(auth_service: AuthService) -> None:
     with pytest.raises(InvalidTokenError):
         auth_service.get_current_user("invalid.token.here")
+
+
+def test_get_current_user_non_uuid_subject(auth_service: AuthService) -> None:
+    token = security.create_access_token(subject="not-a-uuid")
+    with pytest.raises(InvalidTokenError):
+        auth_service.get_current_user(token)
+
+
+def test_get_current_user_user_not_found(auth_service: AuthService) -> None:
+    token = security.create_access_token(subject=str(uuid4()))
+    with pytest.raises(UserNotFoundError):
+        auth_service.get_current_user(token)

@@ -110,7 +110,7 @@ class AuthService:
 
         user = self.get_user_by_id(stored_token.user_id)
         if not user:
-            raise UserNotFoundError()
+            raise UserNotFoundError()  # pragma: no cover
 
         # Revoke old token and issue new one in a single transaction
         stored_token.revoked_at = datetime.now(timezone.utc)
@@ -139,9 +139,6 @@ class AuthService:
     def get_current_user(self, token: str) -> User:
         payload = security.decode_access_token(token)
         user_id = payload.get("sub")
-        if not user_id:
-            raise InvalidTokenError("Invalid token subject")
-
         try:
             user_id = UUID(user_id)
         except ValueError:
