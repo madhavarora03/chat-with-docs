@@ -25,7 +25,7 @@ def session_fixture() -> Generator[Session]:
     """Provide a transactional session that rolls back after each test."""
     connection = engine.connect()
     transaction = connection.begin()
-    session = Session(bind=connection)
+    session = Session(bind=connection, join_transaction_mode="create_savepoint")
 
     yield session
 

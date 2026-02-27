@@ -24,7 +24,7 @@ def test_user_fixture(auth_service: AuthService) -> User:
 
 
 # ─── create_user ───
-def test_create_user(auth_service: AuthService):
+def test_create_user(auth_service: AuthService) -> None:
     user = auth_service.create_user(
         email="new@example.com", name="New User", password="password1234"
     )
@@ -33,7 +33,7 @@ def test_create_user(auth_service: AuthService):
     assert user.password != "password1234"
 
 
-def test_create_user_duplicate_email(auth_service: AuthService, test_user):
+def test_create_user_duplicate_email(auth_service: AuthService, test_user) -> None:
     with pytest.raises(DuplicateEmailError):
         auth_service.create_user(
             email="test@example.com", name="Test User", password="securepassword123"
@@ -41,7 +41,7 @@ def test_create_user_duplicate_email(auth_service: AuthService, test_user):
 
 
 # ─── authenticate_user ───
-def test_authenticate_user_success(auth_service: AuthService, test_user):
+def test_authenticate_user_success(auth_service: AuthService, test_user) -> None:
     user = auth_service.authenticate_user(
         email="test@example.com", password="securepassword123"
     )
@@ -49,14 +49,14 @@ def test_authenticate_user_success(auth_service: AuthService, test_user):
     assert user.email == "test@example.com"
 
 
-def test_authenticate_user_wrong_password(auth_service: AuthService, test_user):
+def test_authenticate_user_wrong_password(auth_service: AuthService, test_user) -> None:
     user = auth_service.authenticate_user(
         email="test@example.com", password="wrongpassword"
     )
     assert user is None
 
 
-def test_authenticate_user_nonexistent(auth_service: AuthService):
+def test_authenticate_user_nonexistent(auth_service: AuthService) -> None:
     user = auth_service.authenticate_user(
         email="nobody@example.com", password="password1234"
     )
@@ -64,7 +64,7 @@ def test_authenticate_user_nonexistent(auth_service: AuthService):
 
 
 # ─── login ───
-def test_login_success(auth_service: AuthService, test_user):
+def test_login_success(auth_service: AuthService, test_user) -> None:
     access_token, refresh_token = auth_service.login(
         email="test@example.com", password="securepassword123"
     )
@@ -72,13 +72,13 @@ def test_login_success(auth_service: AuthService, test_user):
     assert refresh_token
 
 
-def test_login_invalid_credentials(auth_service: AuthService, test_user):
+def test_login_invalid_credentials(auth_service: AuthService, test_user) -> None:
     with pytest.raises(InvalidCredentialsError):
         auth_service.login(email="test@example.com", password="wrongpassword")
 
 
 # ─── refresh_tokens ───
-def test_refresh_tokens_success(auth_service: AuthService, test_user):
+def test_refresh_tokens_success(auth_service: AuthService, test_user) -> None:
     _, old_refresh = auth_service.login(
         email="test@example.com", password="securepassword123"
     )
@@ -88,12 +88,12 @@ def test_refresh_tokens_success(auth_service: AuthService, test_user):
     assert new_refresh != old_refresh
 
 
-def test_refresh_tokens_invalid(auth_service: AuthService):
+def test_refresh_tokens_invalid(auth_service: AuthService) -> None:
     with pytest.raises(InvalidTokenError):
         auth_service.refresh_tokens("invalid.refresh.token")
 
 
-def test_refresh_tokens_reuse_revoked(auth_service: AuthService, test_user):
+def test_refresh_tokens_reuse_revoked(auth_service: AuthService, test_user) -> None:
     _, raw_refresh = auth_service.login("test@example.com", "securepassword123")
     auth_service.refresh_tokens(raw_refresh)  # first use — OK
     with pytest.raises(InvalidTokenError):
@@ -101,7 +101,7 @@ def test_refresh_tokens_reuse_revoked(auth_service: AuthService, test_user):
 
 
 # ─── revoke_all_user_tokens ───
-def test_revoke_all_user_tokens(auth_service: AuthService, test_user: User):
+def test_revoke_all_user_tokens(auth_service: AuthService, test_user: User) -> None:
     auth_service.login(email="test@example.com", password="securepassword123")
     auth_service.login(email="test@example.com", password="securepassword123")
     revoked = auth_service.revoke_all_user_tokens(test_user.id)
@@ -109,12 +109,12 @@ def test_revoke_all_user_tokens(auth_service: AuthService, test_user: User):
 
 
 # ─── get_current_user ───
-def test_get_current_user_success(auth_service: AuthService, test_user: User):
+def test_get_current_user_success(auth_service: AuthService, test_user: User) -> None:
     access_token = security.create_access_token(subject=str(test_user.id))
     user = auth_service.get_current_user(access_token)
     assert user.id == test_user.id
 
 
-def test_get_current_user_invalid_token(auth_service: AuthService):
+def test_get_current_user_invalid_token(auth_service: AuthService) -> None:
     with pytest.raises(InvalidTokenError):
         auth_service.get_current_user("invalid.token.here")
