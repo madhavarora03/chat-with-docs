@@ -78,9 +78,9 @@ loggers:
     handlers: [console]
     propagate: false
 
-  # Uvicorn access logger - handles HTTP request/response logs
+  # Uvicorn access logger - disabled, app middleware handles request logging
   uvicorn.access:
-    level: INFO
+    level: WARNING
     handlers: [console]
     propagate: false
 

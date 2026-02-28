@@ -13,6 +13,6 @@ if __name__ == "__main__":
         app="app.main:app",
         host=settings.HOST,
         port=settings.PORT,
-        reload=settings.is_dev,
+        reload=True,
         log_config=get_uvicorn_log_config(),
     )
