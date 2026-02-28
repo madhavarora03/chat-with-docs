@@ -66,6 +66,21 @@ handlers:
 # Configure specific loggers and their handlers
 # =============================================================================
 loggers:
+  gunicorn:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  gunicorn.error:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  gunicorn.access:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
   # Uvicorn's main logger
   uvicorn:
     level: INFO
