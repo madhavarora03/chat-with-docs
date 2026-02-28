@@ -16,8 +16,16 @@ logconfig_dict = {
     },
     "loggers": {
         "gunicorn": {"handlers": ["console"], "level": "INFO", "propagate": False},
-        "gunicorn.error": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "gunicorn.error": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
         # Disabled — app middleware already logs all requests
-        "gunicorn.access": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "gunicorn.access": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
     },
 }
