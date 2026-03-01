@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 
 from app.core.database import SessionDep
 from app.enums import SessionStatus
+from app.exceptions import SessionNotFoundError
 from app.models import ChatSession
 from app.utils.logger import get_logger
 
@@ -34,12 +35,18 @@ class ChatSessionService:
             stmt = stmt.where(ChatSession.status == status)
         return self.session.exec(stmt).all()
 
-    def get_by_id(self, session_id: UUID, user_id: UUID) -> ChatSession | None:
+    def find_by_id(self, session_id: UUID, user_id: UUID) -> ChatSession | None:
         stmt = select(ChatSession).where(
             ChatSession.id == session_id,
             ChatSession.user_id == user_id,
         )
         return self.session.exec(stmt).first()
+
+    def get_by_id(self, session_id: UUID, user_id: UUID) -> ChatSession:
+        session = self.find_by_id(session_id, user_id)
+        if not session:
+            raise SessionNotFoundError()
+        return session
 
     def update(
         self,
@@ -48,7 +55,7 @@ class ChatSessionService:
         title: str | None = None,
         status: SessionStatus | None = None,
     ) -> ChatSession | None:
-        chat_session = self.get_by_id(session_id, user_id)
+        chat_session = self.find_by_id(session_id, user_id)
         if not chat_session:
             return None
 
@@ -66,7 +73,7 @@ class ChatSessionService:
         return chat_session
 
     def delete(self, session_id: UUID, user_id: UUID) -> bool:
-        chat_session = self.get_by_id(session_id, user_id)
+        chat_session = self.find_by_id(session_id, user_id)
         if not chat_session:
             return False
 

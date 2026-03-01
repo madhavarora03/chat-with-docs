@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
 from app.enums import SessionStatus
+from app.exceptions import SessionNotFoundError
 from app.models import ChatSession
 from app.services.auth_service import AuthService
 from app.services.chat_session_service import ChatSessionService
@@ -99,6 +100,31 @@ def test_list_by_user_filter_by_status(
     assert results[0].id == archived.id
 
 
+# ─── find_by_id ───
+def test_find_by_id_found(
+    chat_session_service: ChatSessionService,
+    test_session: ChatSession,
+    test_user_id: UUID,
+) -> None:
+    result = chat_session_service.find_by_id(test_session.id, test_user_id)
+    assert result is not None
+    assert result.id == test_session.id
+
+
+def test_find_by_id_not_found(
+    chat_session_service: ChatSessionService, test_user_id: UUID
+) -> None:
+    assert chat_session_service.find_by_id(uuid4(), test_user_id) is None
+
+
+def test_find_by_id_wrong_user(
+    chat_session_service: ChatSessionService,
+    test_session: ChatSession,
+    other_user_id: UUID,
+) -> None:
+    assert chat_session_service.find_by_id(test_session.id, other_user_id) is None
+
+
 # ─── get_by_id ───
 def test_get_by_id_found(
     chat_session_service: ChatSessionService,
@@ -106,15 +132,14 @@ def test_get_by_id_found(
     test_user_id: UUID,
 ) -> None:
     result = chat_session_service.get_by_id(test_session.id, test_user_id)
-
-    assert result is not None
     assert result.id == test_session.id
 
 
 def test_get_by_id_not_found(
     chat_session_service: ChatSessionService, test_user_id: UUID
 ) -> None:
-    assert chat_session_service.get_by_id(uuid4(), test_user_id) is None
+    with pytest.raises(SessionNotFoundError):
+        chat_session_service.get_by_id(uuid4(), test_user_id)
 
 
 def test_get_by_id_wrong_user(
@@ -122,7 +147,8 @@ def test_get_by_id_wrong_user(
     test_session: ChatSession,
     other_user_id: UUID,
 ) -> None:
-    assert chat_session_service.get_by_id(test_session.id, other_user_id) is None
+    with pytest.raises(SessionNotFoundError):
+        chat_session_service.get_by_id(test_session.id, other_user_id)
 
 
 # ─── update ───
@@ -202,7 +228,7 @@ def test_delete_success(
 ) -> None:
     assert chat_session_service.delete(test_session.id, test_user_id) is True
     assert (
-        chat_session_service.get_by_id(test_session.id, test_user_id).status
+        chat_session_service.find_by_id(test_session.id, test_user_id).status
         == SessionStatus.DELETED
     )
 
