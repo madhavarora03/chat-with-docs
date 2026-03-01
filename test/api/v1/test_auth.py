@@ -105,6 +105,14 @@ def test_token_endpoint(client: TestClient, test_user):
     assert "access_token" in response.json()
 
 
+def test_token_endpoint_wrong_password(client: TestClient, test_user) -> None:
+    response = client.post(
+        "/api/v1/auth/token",
+        data={"username": "test@example.com", "password": "wrongpassword"},
+    )
+    assert response.status_code == 401
+
+
 # ─── Me ───
 def test_me_authenticated(auth_client: TestClient):
     response = auth_client.get("/api/v1/auth/me")
