@@ -6,6 +6,11 @@ from app.schemas.auth import (
     TokenResponse,
     UserResponse,
 )
+from app.schemas.chat_session import (
+    ChatSessionCreate,
+    ChatSessionResponse,
+    ChatSessionUpdate,
+)
 
 __all__ = [
     "LoginRequest",
@@ -14,4 +19,7 @@ __all__ = [
     "SignupResponse",
     "TokenResponse",
     "UserResponse",
+    "ChatSessionCreate",
+    "ChatSessionResponse",
+    "ChatSessionUpdate",
 ]
