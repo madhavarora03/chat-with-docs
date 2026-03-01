@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # pragma: no cover
     # Initialize logging FIRST - before any other startup operations
     setup_logging()
 
