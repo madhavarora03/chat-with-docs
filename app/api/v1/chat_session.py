@@ -1,15 +1,11 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from starlette.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND
 
 from app.exceptions import SessionNotFoundError
 from app.models import User
-from app.schemas.chat_session import (
-    ChatSessionCreate,
-    ChatSessionResponse,
-    ChatSessionUpdate,
-)
+from app.schemas.chat_session import ChatSessionResponse, ChatSessionUpdate
 from app.services.auth_service import get_current_user
 from app.services.chat_session_service import (
     ChatSessionService,
@@ -20,17 +16,6 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/chat-sessions", tags=["chat_sessions"])
-
-
-@router.post("", response_model=ChatSessionResponse, status_code=HTTP_201_CREATED)
-def create_session(
-    payload: ChatSessionCreate,
-    current_user: User = Depends(get_current_user),
-    chat_session_service: ChatSessionService = Depends(get_chat_session_service),
-) -> ChatSessionResponse:
-    session = chat_session_service.create(current_user.id, payload.title)
-    logger.info("Created session_id=%s for user_id=%s", session.id, current_user.id)
-    return session
 
 
 @router.get("", response_model=list[ChatSessionResponse])
