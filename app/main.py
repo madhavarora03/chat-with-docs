@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from app.api.v1 import api_router
 from app.core.config import get_settings
 from app.core.database import dispose_engine, ping_db
+from app.core.qdrant import close_qdrant_client, ping_qdrant
 from app.utils.logger import get_logger, setup_logging
 
 settings = get_settings()
@@ -17,14 +18,16 @@ async def lifespan(app: FastAPI):  # pragma: no cover
     # Initialize logging FIRST - before any other startup operations
     setup_logging()
 
-    # Startup: verify database connection
+    # Startup: verify database and Qdrant connections
     ping_db()
+    ping_qdrant()
     logger.info("Application startup complete")
 
     yield
 
-    # Shutdown: dispose database engine
+    # Shutdown: dispose database engine and close Qdrant client
     dispose_engine()
+    close_qdrant_client()
     logger.info("Application shutdown complete")
 
 

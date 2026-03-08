@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_BYTES: int = 32
     REFRESH_TOKEN_EXPIRES_DAYS: int = 10
 
+    # Qdrant
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_COLLECTION_NAME: str = "document_chunks"
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
     @property

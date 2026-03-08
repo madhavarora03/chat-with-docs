@@ -53,6 +53,9 @@ services:
       # Refresh token settings
       REFRESH_TOKEN_BYTES: ${REFRESH_TOKEN_BYTES:-32}
       REFRESH_TOKEN_EXPIRES_DAYS: ${REFRESH_TOKEN_EXPIRES_DAYS:-10}
+      # Qdrant
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_COLLECTION_NAME: ${QDRANT_COLLECTION_NAME:-document_chunks}
     volumes:
       - ./logs:/app/logs
     read_only: true
@@ -63,6 +66,8 @@ services:
         condition: service_healthy
       migration:
         condition: service_completed_successfully
+      qdrant:
+        condition: service_healthy
     networks:
       - app_net
       - db_net
@@ -72,6 +77,20 @@ services:
       timeout: 3s
       retries: 5
       start_period: 30s
+
+  qdrant:
+    image: qdrant/qdrant:v1.17.0
+    container_name: chat-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - db_net
 
   postgres:
     image: postgres:16-alpine
@@ -93,6 +112,7 @@ services:
 
 volumes:
   postgres_data:
+  qdrant_data:
 
 networks:
   app_net:

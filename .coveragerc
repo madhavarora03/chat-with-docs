@@ -2,3 +2,4 @@
 omit =
     app/utils/logger.py
     app/core/database.py
+    app/core/qdrant.py
